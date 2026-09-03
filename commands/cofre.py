@@ -28,8 +28,8 @@ class CofreCommands(commands.Cog):
         return self.bot.get_channel(Config.CANAL_LOGS_ID)
     
     @app_commands.command(name="deposito", description="Registra um depósito no cofre")
-    @app_commands.describe(valor="Valor do depósito", tipo="Tipo de dinheiro: limpo ou sujo")
-    async def cofre_deposito(self, interaction: Interaction, valor: app_commands.Range[float, 0.01], tipo: str = "limpo"):
+    @app_commands.describe(valor="Valor do depósito", tipo="Tipo de dinheiro: limpo ou sujo", motivo="Motivo do depósito")
+    async def cofre_deposito(self, interaction: Interaction, valor: app_commands.Range[float, 0.01], tipo: str = "limpo", motivo: str = None):
         if not PermissionService.can_cofre_deposito(interaction.user):
             await interaction.response.send_message("❌ Você não tem permissão para fazer depósitos no cofre.", ephemeral=True)
             return
@@ -51,7 +51,7 @@ class CofreCommands(commands.Cog):
                     user_name=user_info['user_name'],
                     valor=valor,
                     tipo_dinheiro=tipo_dinheiro,
-                    motivo="Depósito"
+                    motivo=motivo or "Depósito"
                 )
                 
                 canal_logs = await self.get_canal_logs()
@@ -78,8 +78,8 @@ class CofreCommands(commands.Cog):
             await interaction.followup.send(embed=embed, ephemeral=True)
     
     @app_commands.command(name="retirada", description="Registra uma retirada do cofre (apenas Alta Cúpula)")
-    @app_commands.describe(valor="Valor da retirada", tipo="Tipo de dinheiro: limpo ou sujo")
-    async def cofre_retirada(self, interaction: Interaction, valor: app_commands.Range[float, 0.01], tipo: str = "limpo"):
+    @app_commands.describe(valor="Valor da retirada", tipo="Tipo de dinheiro: limpo ou sujo", motivo="Motivo da retirada")
+    async def cofre_retirada(self, interaction: Interaction, valor: app_commands.Range[float, 0.01], tipo: str = "limpo", motivo: str = None):
         if not PermissionService.can_cofre_retirada(interaction.user):
             await interaction.response.send_message("❌ Apenas a Alta Cúpula pode fazer retiradas do cofre.", ephemeral=True)
             return
@@ -101,7 +101,7 @@ class CofreCommands(commands.Cog):
                     user_name=user_info['user_name'],
                     valor=valor,
                     tipo_dinheiro=tipo_dinheiro,
-                    motivo="Retirada"
+                    motivo=motivo or "Retirada"
                 )
                 
                 canal_logs = await self.get_canal_logs()
