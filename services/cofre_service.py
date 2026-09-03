@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
+from sqlalchemy import select, func, case
 from database.models import CofreMovimentacao
 from datetime import datetime, timedelta
 from typing import Optional, List
@@ -15,11 +15,12 @@ class CofreService:
         result = await session.execute(
             select(
                 func.sum(
-                    func.case(
+                    case(
                         (CofreMovimentacao.tipo == 'deposito', CofreMovimentacao.valor),
                         (CofreMovimentacao.tipo == 'retirada', -CofreMovimentacao.valor),
                         (CofreMovimentacao.tipo == 'ajuste', CofreMovimentacao.valor),
-                    ).else_(0)
+                        else_=0
+                    )
                 )
             )
         )

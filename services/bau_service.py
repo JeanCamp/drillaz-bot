@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
+from sqlalchemy import select, func, case
 from database.models import BauItem, BauMovimentacao
 from datetime import datetime, timedelta
 from typing import Optional, List
@@ -244,14 +244,16 @@ class BauService:
                 BauMovimentacao.user_name,
                 func.count(BauMovimentacao.id).label('quantidade'),
                 func.sum(
-                    func.case(
+                    case(
                         (BauMovimentacao.tipo == 'entrada', BauMovimentacao.quantidade),
-                    ).else_(0)
+                        else_=0
+                    )
                 ).label('total_entradas'),
                 func.sum(
-                    func.case(
+                    case(
                         (BauMovimentacao.tipo == 'retirada', BauMovimentacao.quantidade),
-                    ).else_(0)
+                        else_=0
+                    )
                 ).label('total_retiradas')
             )
             .where(BauMovimentacao.created_at >= data_limite)
@@ -286,14 +288,16 @@ class BauService:
                 BauMovimentacao.item_nome,
                 func.count(BauMovimentacao.id).label('quantidade'),
                 func.sum(
-                    func.case(
+                    case(
                         (BauMovimentacao.tipo == 'entrada', BauMovimentacao.quantidade),
-                    ).else_(0)
+                        else_=0
+                    )
                 ).label('total_entradas'),
                 func.sum(
-                    func.case(
+                    case(
                         (BauMovimentacao.tipo == 'retirada', BauMovimentacao.quantidade),
-                    ).else_(0)
+                        else_=0
+                    )
                 ).label('total_retiradas')
             )
             .where(BauMovimentacao.created_at >= data_limite)
