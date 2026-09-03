@@ -50,8 +50,8 @@ async def init_db():
         print(f'⚠️ Erro ao criar banco de dados em {db_path}: {e}')
         print('🔄 Tentando usar /tmp como fallback...')
         
-        # Atualizar a URL para usar /tmp
-        new_db_url = 'sqlite:////tmp/gangue.db'
+        # Atualizar a URL para usar /tmp com driver aiosqlite
+        new_db_url = 'sqlite+aiosqlite:////tmp/gangue.db'
         engine = create_async_engine(
             new_db_url,
             echo=False,
