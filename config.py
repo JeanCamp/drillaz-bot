@@ -7,9 +7,9 @@ class Config:
     DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
     DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///data/gangue.db')
     
-    # Se for PostgreSQL, precisa converter a URL para assíncrona
+    # Se for PostgreSQL, precisa converter a URL para assíncrona com asyncpg
     if DATABASE_URL and DATABASE_URL.startswith('postgresql://'):
-        DATABASE_URL = DATABASE_URL.replace('postgresql://', 'postgresql+psycopg2://')
+        DATABASE_URL = DATABASE_URL.replace('postgresql://', 'postgresql+asyncpg://')
     
     # Discord IDs
     CARGO_CUPULA_ID = int(os.getenv('CARGO_CUPULA_ID', 0))
