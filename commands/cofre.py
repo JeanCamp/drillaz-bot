@@ -329,3 +329,5 @@ async def setup(bot: commands.Bot):
     await bot.add_cog(CofreCommands(bot))
 #   A t u a l i z a ç ã o   d e   e x i b i ç ã o   d e   t i p o   d e   d i n h e i r o 
  
+#   A r q u i v o   r e e s c r i t o   p a r a   c o r r i g i r   b y t e s   n u l o s  
+ 
