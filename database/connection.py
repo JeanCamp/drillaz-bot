@@ -32,6 +32,8 @@ async def get_db() -> AsyncSession:
 
 async def init_db():
     """Inicializa o banco de dados criando todas as tabelas"""
+    global engine, async_session
+    
     # Criar diretório do banco de dados se não existir
     db_path = Config.DATABASE_URL.replace('sqlite:///', '')
     db_dir = os.path.dirname(db_path)
@@ -49,7 +51,6 @@ async def init_db():
         print('🔄 Tentando usar /tmp como fallback...')
         
         # Atualizar a URL para usar /tmp
-        global engine, async_session
         new_db_url = 'sqlite:////tmp/gangue.db'
         engine = create_async_engine(
             new_db_url,
