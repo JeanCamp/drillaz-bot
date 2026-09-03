@@ -19,8 +19,7 @@ class CofreService:
                         (CofreMovimentacao.tipo == 'deposito', CofreMovimentacao.valor),
                         (CofreMovimentacao.tipo == 'retirada', -CofreMovimentacao.valor),
                         (CofreMovimentacao.tipo == 'ajuste', CofreMovimentacao.valor),
-                        else_=0
-                    )
+                    ).else_(0)
                 )
             )
         )
@@ -245,14 +244,12 @@ class CofreService:
                 func.sum(
                     func.case(
                         (CofreMovimentacao.tipo == 'deposito', CofreMovimentacao.valor),
-                        else_=0
-                    )
+                    ).else_(0)
                 ).label('total_depositado'),
                 func.sum(
                     func.case(
                         (CofreMovimentacao.tipo == 'retirada', CofreMovimentacao.valor),
-                        else_=0
-                    )
+                    ).else_(0)
                 ).label('total_retirado')
             )
             .where(CofreMovimentacao.created_at >= data_limite)

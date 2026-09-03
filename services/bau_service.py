@@ -246,14 +246,12 @@ class BauService:
                 func.sum(
                     func.case(
                         (BauMovimentacao.tipo == 'entrada', BauMovimentacao.quantidade),
-                        else_=0
-                    )
+                    ).else_(0)
                 ).label('total_entradas'),
                 func.sum(
                     func.case(
                         (BauMovimentacao.tipo == 'retirada', BauMovimentacao.quantidade),
-                        else_=0
-                    )
+                    ).else_(0)
                 ).label('total_retiradas')
             )
             .where(BauMovimentacao.created_at >= data_limite)
@@ -290,14 +288,12 @@ class BauService:
                 func.sum(
                     func.case(
                         (BauMovimentacao.tipo == 'entrada', BauMovimentacao.quantidade),
-                        else_=0
-                    )
+                    ).else_(0)
                 ).label('total_entradas'),
                 func.sum(
                     func.case(
                         (BauMovimentacao.tipo == 'retirada', BauMovimentacao.quantidade),
-                        else_=0
-                    )
+                    ).else_(0)
                 ).label('total_retiradas')
             )
             .where(BauMovimentacao.created_at >= data_limite)
