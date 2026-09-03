@@ -9,9 +9,9 @@ class CofreService:
     """Serviço para gerenciar operações do cofre"""
     
     @staticmethod
-    async def get_saldo_atual(session: AsyncSession) -> float:
-        """Calcula o saldo atual do cofre baseado no histórico"""
-        # Soma todos os depósitos e subtrai todas as retiradas
+    async def get_saldo_atual(session: AsyncSession, tipo_dinheiro: str = 'limpo') -> float:
+        """Calcula o saldo atual do cofre baseado no histórico para um tipo específico de dinheiro"""
+        # Soma todos os depósitos e subtrai todas as retiradas para o tipo específico
         result = await session.execute(
             select(
                 func.sum(
@@ -22,10 +22,23 @@ class CofreService:
                         else_=0
                     )
                 )
-            )
+            ).where(CofreMovimentacao.tipo_dinheiro == tipo_dinheiro)
         )
         saldo = result.scalar() or 0.0
         return round(saldo, 2)
+    
+    @staticmethod
+    async def get_saldos_totais(session: AsyncSession) -> dict:
+        """Retorna saldos separados para dinheiro limpo e sujo"""
+        saldo_limpo = await CofreService.get_saldo_atual(session, 'limpo')
+        saldo_sujo = await CofreService.get_saldo_atual(session, 'sujo')
+        saldo_total = saldo_limpo + saldo_sujo
+        
+        return {
+            'limpo': saldo_limpo,
+            'sujo': saldo_sujo,
+            'total': saldo_total
+        }
     
     @staticmethod
     async def registrar_movimentacao(
@@ -34,6 +47,7 @@ class CofreService:
         user_name: str,
         valor: float,
         tipo: str,
+        tipo_dinheiro: str,
         motivo: str,
         saldo_anterior: float
     ) -> CofreMovimentacao:
@@ -55,6 +69,7 @@ class CofreService:
             user_name=user_name,
             valor=valor if tipo != 'ajuste' else saldo_posterior - saldo_anterior,
             tipo=tipo,
+            tipo_dinheiro=tipo_dinheiro,
             motivo=motivo,
             saldo_anterior=saldo_anterior,
             saldo_posterior=saldo_posterior
@@ -72,7 +87,8 @@ class CofreService:
         user_id: str,
         user_name: str,
         valor: float,
-        motivo: str
+        tipo_dinheiro: str = 'limpo',
+        motivo: str = None
     ) -> CofreMovimentacao:
         """Registra um depósito no cofre"""
         
@@ -80,8 +96,12 @@ class CofreService:
         valor = Validators.validate_valor(valor)
         motivo = Validators.validate_motivo(motivo)
         
-        # Busca saldo atual
-        saldo_anterior = await CofreService.get_saldo_atual(session)
+        # Valida tipo de dinheiro
+        if tipo_dinheiro not in ['limpo', 'sujo']:
+            raise ValueError("Tipo de dinheiro deve ser 'limpo' ou 'sujo'")
+        
+        # Busca saldo atual para o tipo específico
+        saldo_anterior = await CofreService.get_saldo_atual(session, tipo_dinheiro)
         
         # Registra a movimentação
         return await CofreService.registrar_movimentacao(
@@ -90,6 +110,7 @@ class CofreService:
             user_name=user_name,
             valor=valor,
             tipo='deposito',
+            tipo_dinheiro=tipo_dinheiro,
             motivo=motivo,
             saldo_anterior=saldo_anterior
         )
@@ -100,7 +121,8 @@ class CofreService:
         user_id: str,
         user_name: str,
         valor: float,
-        motivo: str
+        tipo_dinheiro: str = 'limpo',
+        motivo: str = None
     ) -> CofreMovimentacao:
         """Registra uma retirada do cofre"""
         
@@ -108,8 +130,12 @@ class CofreService:
         valor = Validators.validate_valor(valor)
         motivo = Validators.validate_motivo(motivo)
         
-        # Busca saldo atual
-        saldo_anterior = await CofreService.get_saldo_atual(session)
+        # Valida tipo de dinheiro
+        if tipo_dinheiro not in ['limpo', 'sujo']:
+            raise ValueError("Tipo de dinheiro deve ser 'limpo' ou 'sujo'")
+        
+        # Busca saldo atual para o tipo específico
+        saldo_anterior = await CofreService.get_saldo_atual(session, tipo_dinheiro)
         
         # Verifica se há saldo suficiente
         if not Validators.validate_saldo_suficiente(saldo_anterior, valor):
@@ -124,6 +150,7 @@ class CofreService:
             user_name=user_name,
             valor=valor,
             tipo='retirada',
+            tipo_dinheiro=tipo_dinheiro,
             motivo=motivo,
             saldo_anterior=saldo_anterior
         )

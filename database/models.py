@@ -25,13 +25,14 @@ class CofreMovimentacao(Base):
     user_name = Column(String(100), nullable=False)
     valor = Column(Float, nullable=False)
     tipo = Column(String(20), nullable=False)  # 'deposito', 'retirada', 'ajuste'
+    tipo_dinheiro = Column(String(20), nullable=False, default='limpo')  # 'limpo' ou 'sujo'
     motivo = Column(Text, nullable=True)
     saldo_anterior = Column(Float, nullable=False)
     saldo_posterior = Column(Float, nullable=False)
     created_at = Column(DateTime, server_default=func.now(), index=True)
     
     def __repr__(self):
-        return f"<CofreMovimentacao(id={self.id}, tipo='{self.tipo}', valor={self.valor}, user='{self.user_name}')>"
+        return f"<CofreMovimentacao(id={self.id}, tipo='{self.tipo}', tipo_dinheiro='{self.tipo_dinheiro}', valor={self.valor}, user='{self.user_name}')>"
 
 class BauItem(Base):
     """Itens controlados pelo baú"""
