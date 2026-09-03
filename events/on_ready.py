@@ -30,9 +30,27 @@ async def on_ready(bot: commands.Bot):
         print(f'  - {command.name}')
     
     try:
-        # Em produção, tentar sincronizar em todos os servidores conectados
-        print('🌐 Sincronizando em todos os servidores...')
+        # Forçar sincronização completa
+        print('🔄 Forçando sincronização completa de comandos...')
         
+        # Primeiro limpa comandos globais
+        try:
+            bot.tree.clear_global_commands()
+            print('🗑️ Comandos globais limpos')
+        except Exception as e:
+            print(f'⚠️ Erro ao limpar comandos globais: {e}')
+        
+        # Re-carrega os comandos
+        print('📦 Recarregando comandos...')
+        await bot.setup_hook()
+        
+        # Sincroniza globalmente
+        print('🌐 Sincronizando globalmente...')
+        synced = await bot.tree.sync()
+        print(f'✅ {len(synced)} comandos sincronizados globalmente')
+        
+        # Depois sincroniza em todos os servidores
+        print('🌐 Sincronizando em todos os servidores...')
         for guild in bot.guilds:
             try:
                 guild_synced = await bot.tree.sync(guild=guild)
@@ -41,11 +59,6 @@ async def on_ready(bot: commands.Bot):
                     print(f'  - /{command.name}')
             except Exception as e:
                 print(f'⚠️ Erro ao sincronizar no servidor {guild.name}: {e}')
-        
-        # Também sincroniza globalmente como backup
-        print('🌐 Sincronizando globalmente...')
-        synced = await bot.tree.sync()
-        print(f'✅ {len(synced)} comandos sincronizados globalmente')
                 
     except Exception as e:
         print(f'❌ Erro ao sincronizar comandos: {e}')
