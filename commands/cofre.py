@@ -1,5 +1,5 @@
 import discord
-from discord import app_commands, Interaction, Member
+from discord import app_commands, Interaction, Member, Embed
 from discord.ext import commands
 from discord import Color
 from sqlalchemy.ext.asyncio import AsyncSession
