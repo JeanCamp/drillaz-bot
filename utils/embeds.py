@@ -26,7 +26,7 @@ class EmbedBuilder:
         embed.add_field(name="📅 Data", value=format_datetime(movimentacao.created_at), inline=False)
         
         embed.set_footer(text=f"ID da movimentação: {movimentacao.id}")
-        embed.set_timestamp(datetime.now())
+        embed.timestamp = datetime.now()
         
         return embed
     
@@ -52,7 +52,7 @@ class EmbedBuilder:
         embed.add_field(name="📅 Data", value=format_datetime(movimentacao.created_at), inline=False)
         
         embed.set_footer(text=f"ID da movimentação: {movimentacao.id}")
-        embed.set_timestamp(datetime.now())
+        embed.timestamp = datetime.now()
         
         return embed
     
@@ -78,7 +78,7 @@ class EmbedBuilder:
                 inline=False
             )
         
-        embed.set_timestamp(datetime.now())
+        embed.timestamp = datetime.now()
         
         return embed
     
@@ -117,7 +117,7 @@ class EmbedBuilder:
         if len(movimentacoes) > 10:
             embed.set_footer(text=f"Mostrando 10 de {len(movimentacoes)} movimentações")
         
-        embed.set_timestamp(datetime.now())
+        embed.timestamp = datetime.now()
         
         return embed
     
@@ -157,7 +157,7 @@ class EmbedBuilder:
         if len(movimentacoes) > 10:
             embed.set_footer(text=f"Mostrando 10 de {len(movimentacoes)} movimentações")
         
-        embed.set_timestamp(datetime.now())
+        embed.timestamp = datetime.now()
         
         return embed
     
@@ -184,7 +184,7 @@ class EmbedBuilder:
         if len(itens) > 25:
             embed.set_footer(text=f"Mostrando 25 de {len(itens)} itens")
         
-        embed.set_timestamp(datetime.now())
+        embed.timestamp = datetime.now()
         
         return embed
     
@@ -237,7 +237,7 @@ class EmbedBuilder:
             embed.add_field(name=key, value=str(value), inline=False)
         
         embed.set_footer(text="Clique em um botão para confirmar ou cancelar")
-        embed.set_timestamp(datetime.now())
+        embed.timestamp = datetime.now()
         
         return embed
     
@@ -276,6 +276,6 @@ class EmbedBuilder:
             ])
             embed.add_field(name="👥 Top Usuários", value=top_text, inline=False)
         
-        embed.set_timestamp(datetime.now())
+        embed.timestamp = datetime.now()
         
         return embed
