@@ -7,6 +7,10 @@ class Config:
     DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
     DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///data/gangue.db')
     
+    # Se for PostgreSQL, precisa converter a URL para assíncrona
+    if DATABASE_URL and DATABASE_URL.startswith('postgresql://'):
+        DATABASE_URL = DATABASE_URL.replace('postgresql://', 'postgresql+psycopg2://')
+    
     # Discord IDs
     CARGO_CUPULA_ID = int(os.getenv('CARGO_CUPULA_ID', 0))
     CANAL_LOGS_ID = int(os.getenv('CANAL_LOGS_ID', 0))
