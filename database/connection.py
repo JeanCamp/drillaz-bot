@@ -40,5 +40,30 @@ async def init_db():
         os.makedirs(db_dir, exist_ok=True)
         print(f'📁 Diretório do banco de dados criado: {db_dir}')
     
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    # Se ainda falhar, tentar usar /tmp como fallback
+    try:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+    except Exception as e:
+        print(f'⚠️ Erro ao criar banco de dados em {db_path}: {e}')
+        print('🔄 Tentando usar /tmp como fallback...')
+        
+        # Atualizar a URL para usar /tmp
+        global engine, async_session
+        new_db_url = 'sqlite:////tmp/gangue.db'
+        engine = create_async_engine(
+            new_db_url,
+            echo=False,
+            future=True
+        )
+        async_session = async_sessionmaker(
+            engine,
+            class_=AsyncSession,
+            expire_on_commit=False,
+            autocommit=False,
+            autoflush=False
+        )
+        
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        print('✅ Banco de dados criado em /tmp/gangue.db')
