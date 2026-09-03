@@ -327,3 +327,5 @@ class CofreCommands(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(CofreCommands(bot))
+#   A t u a l i z a ç ã o   d e   e x i b i ç ã o   d e   t i p o   d e   d i n h e i r o  
+ 
