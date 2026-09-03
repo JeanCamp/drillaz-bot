@@ -32,39 +32,11 @@ async def get_db() -> AsyncSession:
 
 async def init_db():
     """Inicializa o banco de dados criando todas as tabelas"""
-    global engine, async_session
-    
-    # Criar diretório do banco de dados se não existir
-    db_path = Config.DATABASE_URL.replace('sqlite:///', '')
-    db_dir = os.path.dirname(db_path)
-    
-    if db_dir and not os.path.exists(db_dir):
-        os.makedirs(db_dir, exist_ok=True)
-        print(f'📁 Diretório do banco de dados criado: {db_dir}')
-    
-    # Se ainda falhar, tentar usar /tmp como fallback
+    # PostgreSQL não precisa criar diretórios, é remoto
     try:
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
+        print('✅ Banco de dados PostgreSQL inicializado com sucesso')
     except Exception as e:
-        print(f'⚠️ Erro ao criar banco de dados em {db_path}: {e}')
-        print('🔄 Tentando usar /tmp como fallback...')
-        
-        # Atualizar a URL para usar /tmp com driver aiosqlite
-        new_db_url = 'sqlite+aiosqlite:////tmp/gangue.db'
-        engine = create_async_engine(
-            new_db_url,
-            echo=False,
-            future=True
-        )
-        async_session = async_sessionmaker(
-            engine,
-            class_=AsyncSession,
-            expire_on_commit=False,
-            autocommit=False,
-            autoflush=False
-        )
-        
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
-        print('✅ Banco de dados criado em /tmp/gangue.db')
+        print(f'❌ Erro ao inicializar banco de dados: {e}')
+        raise
