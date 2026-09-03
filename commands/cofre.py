@@ -38,7 +38,7 @@ class CofreCommands(commands.Cog):
         user_info = PermissionService.get_user_info(interaction.user)
         
         if tipo.lower() not in ['limpo', 'sujo']:
-            await interaction.response.send_message("❌ Tipo de dinheiro inválido. Use: limpo ou sujo", ephemeral=True)
+            await interaction.followup.send("❌ Tipo de dinheiro inválido. Use: limpo ou sujo", ephemeral=True)
             return
         
         tipo_dinheiro = tipo.lower()
@@ -88,7 +88,7 @@ class CofreCommands(commands.Cog):
         user_info = PermissionService.get_user_info(interaction.user)
         
         if tipo.lower() not in ['limpo', 'sujo']:
-            await interaction.response.send_message("❌ Tipo de dinheiro inválido. Use: limpo ou sujo", ephemeral=True)
+            await interaction.followup.send("❌ Tipo de dinheiro inválido. Use: limpo ou sujo", ephemeral=True)
             return
         
         tipo_dinheiro = tipo.lower()
