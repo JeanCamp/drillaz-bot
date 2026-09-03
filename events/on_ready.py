@@ -29,29 +29,23 @@ async def on_ready(bot: commands.Bot):
     for command in bot.tree.get_commands():
         print(f'  - {command.name}')
     
-    # ID do servidor do usuário
-    GUILD_ID = 1531449436360933406  # Youngers Drillaz
-    
     try:
-        # Primeiro tenta sincronizar globalmente
-        print('🌐 Sincronizando globalmente...')
-        synced = await bot.tree.sync()
-        print(f'✅ {len(synced)} comandos sincronizados globalmente')
+        # Em produção, tentar sincronizar em todos os servidores conectados
+        print('🌐 Sincronizando em todos os servidores...')
         
-        # Depois tenta no servidor específico
-        guild = bot.get_guild(GUILD_ID)
-        if guild:
-            print(f'🎯 Servidor encontrado: {guild.name} (ID: {guild.id})')
+        for guild in bot.guilds:
             try:
-                # Sincroniza especificamente neste servidor
                 guild_synced = await bot.tree.sync(guild=guild)
-                print(f'✅ {len(guild_synced)} comandos sincronizados no servidor {guild.name}')
+                print(f'✅ {len(guild_synced)} comandos sincronizados no servidor {guild.name} (ID: {guild.id})')
                 for command in guild_synced:
                     print(f'  - /{command.name}')
             except Exception as e:
-                print(f'❌ Erro ao sincronizar no servidor específico: {e}')
-        else:
-            print(f'⚠️ Servidor ID {GUILD_ID} não encontrado')
+                print(f'⚠️ Erro ao sincronizar no servidor {guild.name}: {e}')
+        
+        # Também sincroniza globalmente como backup
+        print('🌐 Sincronizando globalmente...')
+        synced = await bot.tree.sync()
+        print(f'✅ {len(synced)} comandos sincronizados globalmente')
                 
     except Exception as e:
         print(f'❌ Erro ao sincronizar comandos: {e}')
