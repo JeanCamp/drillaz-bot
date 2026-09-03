@@ -30,20 +30,6 @@ async def on_ready(bot: commands.Bot):
         print(f'  - {command.name}')
     
     try:
-        # Forçar sincronização completa
-        print('🔄 Forçando sincronização completa de comandos...')
-        
-        # Primeiro limpa comandos globais
-        try:
-            bot.tree.clear_global_commands()
-            print('🗑️ Comandos globais limpos')
-        except Exception as e:
-            print(f'⚠️ Erro ao limpar comandos globais: {e}')
-        
-        # Re-carrega os comandos
-        print('📦 Recarregando comandos...')
-        await bot.setup_hook()
-        
         # Sincroniza globalmente
         print('🌐 Sincronizando globalmente...')
         synced = await bot.tree.sync()
