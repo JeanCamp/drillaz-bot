@@ -61,7 +61,7 @@ class BauCommands(commands.Cog):
         user_info = PermissionService.get_user_info(interaction.user)
         
         try:
-            async for session in get_db():
+            async with get_db() as session:
                 # Registra a entrada
                 movimentacao = await BauService.entrada(
                     session=session,
@@ -103,7 +103,7 @@ class BauCommands(commands.Cog):
     ):
         """Autocomplete para sugerir itens existentes"""
         try:
-            async for session in get_db():
+            async with get_db() as session:
                 # Busca todos os itens
                 result = await session.execute(
                     select(BauItem).order_by(BauItem.nome)
@@ -158,7 +158,7 @@ class BauCommands(commands.Cog):
         user_info = PermissionService.get_user_info(interaction.user)
         
         try:
-            async for session in get_db():
+            async with get_db() as session:
                 # Registra a retirada
                 movimentacao = await BauService.retirada(
                     session=session,
@@ -200,7 +200,7 @@ class BauCommands(commands.Cog):
     ):
         """Autocomplete para sugerir itens existentes"""
         try:
-            async for session in get_db():
+            async with get_db() as session:
                 result = await session.execute(
                     select(BauItem).order_by(BauItem.nome)
                 )
@@ -223,7 +223,7 @@ class BauCommands(commands.Cog):
         await interaction.response.defer()
         
         try:
-            async for session in get_db():
+            async with get_db() as session:
                 # Busca todos os itens
                 itens = await BauService.get_all_items(session)
                 
@@ -276,7 +276,7 @@ class BauCommands(commands.Cog):
             return
         
         try:
-            async for session in get_db():
+            async with get_db() as session:
                 # Busca histórico
                 historico = await BauService.get_historico(
                     session=session,
@@ -319,7 +319,7 @@ class BauCommands(commands.Cog):
         await interaction.response.defer()
         
         try:
-            async for session in get_db():
+            async with get_db() as session:
                 # Busca o item
                 item_obj = await BauService.get_item_by_nome(session, item)
                 

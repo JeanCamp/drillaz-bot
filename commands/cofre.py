@@ -44,7 +44,7 @@ class CofreCommands(commands.Cog):
         tipo_dinheiro = tipo.lower()
         
         try:
-            async for session in get_db():
+            async with get_db() as session:
                 movimentacao = await CofreService.deposito(
                     session=session,
                     user_id=user_info['user_id'],
@@ -94,7 +94,7 @@ class CofreCommands(commands.Cog):
         tipo_dinheiro = tipo.lower()
         
         try:
-            async for session in get_db():
+            async with get_db() as session:
                 movimentacao = await CofreService.retirada(
                     session=session,
                     user_id=user_info['user_id'],
@@ -136,7 +136,7 @@ class CofreCommands(commands.Cog):
         await interaction.response.defer()
         
         try:
-            async for session in get_db():
+            async with get_db() as session:
                 saldos = await CofreService.get_saldos_totais(session)
                 ultima_mov = await CofreService.get_ultima_movimentacao(session)
                 
@@ -173,7 +173,7 @@ class CofreCommands(commands.Cog):
         await interaction.response.defer()
         
         try:
-            async for session in get_db():
+            async with get_db() as session:
                 historico = await CofreService.get_historico(session=session, limit=10)
                 
                 if not historico:
@@ -203,7 +203,7 @@ class CofreCommands(commands.Cog):
         user_info = PermissionService.get_user_info(interaction.user)
         
         try:
-            async for session in get_db():
+            async with get_db() as session:
                 saldo_anterior = await CofreService.get_saldo_atual(session)
                 
                 embed = EmbedBuilder.create_info_embed(
