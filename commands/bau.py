@@ -75,7 +75,7 @@ class BauCommands(commands.Cog):
                 # Envia log
                 canal_logs = await self.get_canal_logs()
                 if canal_logs:
-                    await LogService.log_bau_entrada(
+                    await LogService.send_bau_log(
                         session=session,
                         movimentacao=movimentacao,
                         user_mention=user_info['user_mention'],
@@ -172,7 +172,7 @@ class BauCommands(commands.Cog):
                 # Envia log
                 canal_logs = await self.get_canal_logs()
                 if canal_logs:
-                    await LogService.log_bau_retirada(
+                    await LogService.send_bau_log(
                         session=session,
                         movimentacao=movimentacao,
                         user_mention=user_info['user_mention'],
