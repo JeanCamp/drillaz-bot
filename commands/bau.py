@@ -2,7 +2,9 @@ import discord
 from discord import app_commands, Interaction, Member
 from discord.ext import commands
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from database.connection import get_db
+from database.models import BauItem
 from services.bau_service import BauService
 from services.permission_service import PermissionService
 from services.log_service import LogService
@@ -25,7 +27,7 @@ class BauCommands(commands.Cog):
     
     @app_commands.command(name="bau_entrada", description="Registra uma entrada de item no baú")
     @app_commands.describe(
-        item="Nome do item",
+        item="Nome do item (use autocomplete para itens existentes)",
         quantidade="Quantidade a ser adicionada",
         motivo="Motivo da entrada"
     )
@@ -36,6 +38,35 @@ class BauCommands(commands.Cog):
         quantidade: app_commands.Range[int, 1],
         motivo: Optional[str] = None
     ):
+        """Autocomplete para itens existentes"""
+        await bau_entry.autocomplete(interaction, item)
+    
+    @bau_entry.autocomplete('item')
+    async def bau_entry_autocomplete(
+        self,
+        interaction: Interaction,
+        current: str
+    ):
+        """Autocomplete para sugerir itens existentes"""
+        try:
+            async for session in get_db():
+                # Busca todos os itens
+                result = await session.execute(
+                    select(BauItem).order_by(BauItem.nome)
+                )
+                itens = result.scalars().all()
+                
+                # Filtra itens que começam com o texto atual
+                if current:
+                    itens = [i for i in itens if current.lower() in i.lower()]
+                
+                # Retorna até 25 sugestões
+                return [
+                    app_commands.Choice(name=item, value=item)
+                    for item in itens[:25]
+                ]
+        except:
+            return []
         """Registra uma entrada de item no baú"""
         
         # Verifica se está no canal correto
@@ -96,7 +127,7 @@ class BauCommands(commands.Cog):
     
     @app_commands.command(name="bau_retirada", description="Registra uma retirada de item do baú")
     @app_commands.describe(
-        item="Nome do item",
+        item="Nome do item (use autocomplete para itens existentes)",
         quantidade="Quantidade a ser retirada",
         motivo="Motivo da retirada"
     )
@@ -107,6 +138,32 @@ class BauCommands(commands.Cog):
         quantidade: app_commands.Range[int, 1],
         motivo: Optional[str] = None
     ):
+        """Autocomplete para itens existentes"""
+        await bau_retirada.autocomplete(interaction, item)
+    
+    @bau_retirada.autocomplete('item')
+    async def bau_retirada_autocomplete(
+        self,
+        interaction: Interaction,
+        current: str
+    ):
+        """Autocomplete para sugerir itens existentes"""
+        try:
+            async for session in get_db():
+                result = await session.execute(
+                    select(BauItem).order_by(BauItem.nome)
+                )
+                itens = result.scalars().all()
+                
+                if current:
+                    itens = [i for i in itens if current.lower() in i.lower()]
+                
+                return [
+                    app_commands.Choice(name=item, value=item)
+                    for item in itens[:25]
+                ]
+        except:
+            return []
         """Registra uma retirada de item do baú"""
         
         # Verifica se está no canal correto
