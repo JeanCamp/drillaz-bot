@@ -26,7 +26,8 @@ async def setup_hook():
         'commands.bau',
         'commands.config',
         'commands.frase',
-        'commands.relatorio'
+        'commands.relatorio',
+        'commands.manutencao'
     ]
     
     for extension in extensions:
