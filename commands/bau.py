@@ -72,19 +72,19 @@ class BauCommands(commands.Cog):
                     motivo=motivo or ""
                 )
                 
-                # Envia log
-                canal_logs = await self.get_canal_logs()
-                if canal_logs:
-                    await LogService.send_bau_log(
-                        session=session,
-                        movimentacao=movimentacao,
-                        user_mention=user_info['user_mention'],
-                        canal_logs=canal_logs
-                    )
+                # Comenta log temporariamente para debug
+                # canal_logs = await self.get_canal_logs()
+                # if canal_logs:
+                #     await LogService.send_bau_log(
+                #         session=session,
+                #         movimentacao=movimentacao,
+                #         user_mention=user_info['user_mention'],
+                #         canal_logs=canal_logs
+                #     )
                 
                 embed = EmbedBuilder.create_success_embed(
                     f"Entrada de {quantidade}x {item} registrada com sucesso!\n\n"
-                    f"Estoque atual: {movimentacao.item.estoque} unidades"
+                    f"Estoque atual: {movimentacao.estoque_posterior} unidades"
                 )
                 await interaction.followup.send(embed=embed)
                 
@@ -169,19 +169,19 @@ class BauCommands(commands.Cog):
                     motivo=motivo or ""
                 )
                 
-                # Envia log
-                canal_logs = await self.get_canal_logs()
-                if canal_logs:
-                    await LogService.send_bau_log(
-                        session=session,
-                        movimentacao=movimentacao,
-                        user_mention=user_info['user_mention'],
-                        canal_logs=canal_logs
-                    )
+                # Comenta log temporariamente para debug
+                # canal_logs = await self.get_canal_logs()
+                # if canal_logs:
+                #     await LogService.send_bau_log(
+                #         session=session,
+                #         movimentacao=movimentacao,
+                #         user_mention=user_info['user_mention'],
+                #         canal_logs=canal_logs
+                #     )
                 
                 embed = EmbedBuilder.create_success_embed(
                     f"Retirada de {quantidade}x {item} registrada com sucesso!\n\n"
-                    f"Estoque atual: {movimentacao.item.estoque} unidades"
+                    f"Estoque atual: {movimentacao.estoque_posterior} unidades"
                 )
                 await interaction.followup.send(embed=embed)
                 
