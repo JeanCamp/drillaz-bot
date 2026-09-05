@@ -418,7 +418,7 @@ class BauCommands(commands.Cog):
                     return
                 
                 # Conta movimentações
-                from sqlalchemy import func, select
+                from sqlalchemy import func
                 result = await session.execute(
                     select(func.count()).select_from(BauMovimentacao).where(BauMovimentacao.item_id == item_obj.id)
                 )
