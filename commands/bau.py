@@ -2,9 +2,7 @@ import discord
 from discord import app_commands, Interaction, Member
 from discord.ext import commands
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 from database.connection import get_db
-from database.models import BauItem
 from services.bau_service import BauService
 from services.permission_service import PermissionService
 from services.log_service import LogService
@@ -95,32 +93,32 @@ class BauCommands(commands.Cog):
             embed = EmbedBuilder.create_error_embed(f"Erro ao processar entrada: {str(e)}")
             await interaction.followup.send(embed=embed, ephemeral=True)
     
-    @bau_entrada.autocomplete('item')
-    async def bau_entrada_autocomplete(
-        self,
-        interaction: Interaction,
-        current: str
-    ):
-        """Autocomplete para sugerir itens existentes"""
-        try:
-            async with get_db() as session:
-                # Busca todos os itens
-                result = await session.execute(
-                    select(BauItem).order_by(BauItem.nome)
-                )
-                itens = result.scalars().all()
-                
-                # Filtra itens que começam com o texto atual
-                if current:
-                    itens = [i for i in itens if current.lower() in i.nome.lower()]
-                
-                # Retorna até 25 sugestões
-                return [
-                    app_commands.Choice(name=item.nome, value=item.nome)
-                    for item in itens[:25]
-                ]
-        except:
-            return []
+    # @bau_entrada.autocomplete('item')
+    # async def bau_entrada_autocomplete(
+    #     self,
+    #     interaction: Interaction,
+    #     current: str
+    # ):
+    #     """Autocomplete para sugerir itens existentes"""
+    #     try:
+    #         async with get_db() as session:
+    #             # Busca todos os itens
+    #             result = await session.execute(
+    #                 select(BauItem).order_by(BauItem.nome)
+    #             )
+    #             itens = result.scalars().all()
+    #             
+    #             # Filtra itens que começam com o texto atual
+    #             if current:
+    #                 itens = [i for i in itens if current.lower() in i.nome.lower()]
+    #             
+    #             # Retorna até 25 sugestões
+    #             return [
+    #                 app_commands.Choice(name=item.nome, value=item.nome)
+    #                 for item in itens[:25]
+    #             ]
+    #     except:
+    #         return []
     
     @app_commands.command(name="bau_retirada", description="Registra uma retirada de item do baú")
     @app_commands.describe(
@@ -192,29 +190,29 @@ class BauCommands(commands.Cog):
             embed = EmbedBuilder.create_error_embed(f"Erro ao processar retirada: {str(e)}")
             await interaction.followup.send(embed=embed, ephemeral=True)
     
-    @bau_retirada.autocomplete('item')
-    async def bau_retirada_autocomplete(
-        self,
-        interaction: Interaction,
-        current: str
-    ):
-        """Autocomplete para sugerir itens existentes"""
-        try:
-            async with get_db() as session:
-                result = await session.execute(
-                    select(BauItem).order_by(BauItem.nome)
-                )
-                itens = result.scalars().all()
-                
-                if current:
-                    itens = [i for i in itens if current.lower() in i.nome.lower()]
-                
-                return [
-                    app_commands.Choice(name=item.nome, value=item.nome)
-                    for item in itens[:25]
-                ]
-        except:
-            return []
+    # @bau_retirada.autocomplete('item')
+    # async def bau_retirada_autocomplete(
+    #     self,
+    #     interaction: Interaction,
+    #     current: str
+    # ):
+    #     """Autocomplete para sugerir itens existentes"""
+    #     try:
+    #         async with get_db() as session:
+    #             result = await session.execute(
+    #                 select(BauItem).order_by(BauItem.nome)
+    #             )
+    #             itens = result.scalars().all()
+    #             
+    #             if current:
+    #                 itens = [i for i in itens if current.lower() in i.nome.lower()]
+    #             
+    #             return [
+    #                 app_commands.Choice(name=item.nome, value=item.nome)
+    #                 for item in itens[:25]
+    #             ]
+    #     except:
+    #         return []
     
     @app_commands.command(name="bau_itens", description="Lista todos os itens do baú e seus estoques")
     async def bau_itens(self, interaction: Interaction):
