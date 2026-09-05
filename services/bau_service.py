@@ -4,22 +4,42 @@ from database.models import BauItem, BauMovimentacao
 from datetime import datetime, timedelta
 from typing import Optional, List
 from utils.validators import Validators, ValidationError
+import unicodedata
 
 class BauService:
     """Serviço para gerenciar operações do baú"""
     
     @staticmethod
+    def normalizar_nome(nome: str) -> str:
+        """Normaliza o nome do item para evitar duplicidades"""
+        # Converte para minúsculas
+        nome = nome.lower()
+        
+        # Remove acentos
+        nome = unicodedata.normalize('NFKD', nome)
+        nome = ''.join(c for c in nome if not unicodedata.combining(c))
+        
+        # Remove espaços extras no início e fim
+        nome = nome.strip()
+        
+        # Remove espaços extras no meio
+        nome = ' '.join(nome.split())
+        
+        return nome
+    
+    @staticmethod
     async def get_or_create_item(session: AsyncSession, nome: str) -> BauItem:
         """Busca um item existente ou cria um novo"""
-        nome = Validators.validate_item_nome(nome)
+        # Normaliza o nome antes de buscar
+        nome_normalizado = BauService.normalizar_nome(nome)
         
         result = await session.execute(
-            select(BauItem).where(BauItem.nome == nome)
+            select(BauItem).where(BauItem.nome == nome_normalizado)
         )
         item = result.scalar_one_or_none()
         
         if not item:
-            item = BauItem(nome=nome, estoque=0)
+            item = BauItem(nome=nome_normalizado, estoque=0)
             session.add(item)
             await session.commit()
             await session.refresh(item)
@@ -28,9 +48,10 @@ class BauService:
     
     @staticmethod
     async def get_item_by_nome(session: AsyncSession, nome: str) -> Optional[BauItem]:
-        """Busca um item pelo nome"""
+        """Busca um item pelo nome (com normalização)"""
+        nome_normalizado = BauService.normalizar_nome(nome)
         result = await session.execute(
-            select(BauItem).where(BauItem.nome == nome)
+            select(BauItem).where(BauItem.nome == nome_normalizado)
         )
         return result.scalar_one_or_none()
     
