@@ -70,15 +70,15 @@ class BauCommands(commands.Cog):
                     motivo=motivo or ""
                 )
                 
-                # Comenta log temporariamente para debug
-                # canal_logs = await self.get_canal_logs()
-                # if canal_logs:
-                #     await LogService.send_bau_log(
-                #         session=session,
-                #         movimentacao=movimentacao,
-                #         user_mention=user_info['user_mention'],
-                #         canal_logs=canal_logs
-                #     )
+                # Envia log
+                canal_logs = await self.get_canal_logs()
+                if canal_logs:
+                    await LogService.send_bau_log(
+                        session=session,
+                        movimentacao=movimentacao,
+                        user_mention=user_info['user_mention'],
+                        canal_logs=canal_logs
+                    )
                 
                 embed = EmbedBuilder.create_success_embed(
                     f"Entrada de {quantidade}x {item} registrada com sucesso!\n\n"
@@ -93,32 +93,30 @@ class BauCommands(commands.Cog):
             embed = EmbedBuilder.create_error_embed(f"Erro ao processar entrada: {str(e)}")
             await interaction.followup.send(embed=embed, ephemeral=True)
     
-    # @bau_entrada.autocomplete('item')
-    # async def bau_entrada_autocomplete(
-    #     self,
-    #     interaction: Interaction,
-    #     current: str
-    # ):
-    #     """Autocomplete para sugerir itens existentes"""
-    #     try:
-    #         async with get_db() as session:
-    #             # Busca todos os itens
-    #             result = await session.execute(
-    #                 select(BauItem).order_by(BauItem.nome)
-    #             )
-    #             itens = result.scalars().all()
-    #             
-    #             # Filtra itens que começam com o texto atual
-    #             if current:
-    #                 itens = [i for i in itens if current.lower() in i.nome.lower()]
-    #             
-    #             # Retorna até 25 sugestões
-    #             return [
-    #                 app_commands.Choice(name=item.nome, value=item.nome)
-    #                 for item in itens[:25]
-    #             ]
-    #     except:
-    #         return []
+    @bau_entrada.autocomplete('item')
+    async def bau_entrada_autocomplete(
+        self,
+        interaction: Interaction,
+        current: str
+    ):
+        """Autocomplete estático com itens comuns"""
+        itens_comuns = [
+            "pistola", "submetralhadora", "fuzil", "escopeta", "sniper",
+            "municao 9mm", "municao 45", "municao 556", "municao 762",
+            "colete nivel 1", "colete nivel 2", "colete nivel 3",
+            "capacete", "mascara", "luvas", "botas",
+            "bandagem", "kit medico", "analgesico", "antibiotico",
+            "radio", "gps", "mapa", "bussola",
+            "carrinho", "mochila", "caixa", "armadura"
+        ]
+        
+        if current:
+            itens_comuns = [i for i in itens_comuns if current.lower() in i.lower()]
+        
+        return [
+            app_commands.Choice(name=item, value=item)
+            for item in itens_comuns[:25]
+        ]
     
     @app_commands.command(name="bau_retirada", description="Registra uma retirada de item do baú")
     @app_commands.describe(
@@ -167,15 +165,15 @@ class BauCommands(commands.Cog):
                     motivo=motivo or ""
                 )
                 
-                # Comenta log temporariamente para debug
-                # canal_logs = await self.get_canal_logs()
-                # if canal_logs:
-                #     await LogService.send_bau_log(
-                #         session=session,
-                #         movimentacao=movimentacao,
-                #         user_mention=user_info['user_mention'],
-                #         canal_logs=canal_logs
-                #     )
+                # Envia log
+                canal_logs = await self.get_canal_logs()
+                if canal_logs:
+                    await LogService.send_bau_log(
+                        session=session,
+                        movimentacao=movimentacao,
+                        user_mention=user_info['user_mention'],
+                        canal_logs=canal_logs
+                    )
                 
                 embed = EmbedBuilder.create_success_embed(
                     f"Retirada de {quantidade}x {item} registrada com sucesso!\n\n"
@@ -190,29 +188,30 @@ class BauCommands(commands.Cog):
             embed = EmbedBuilder.create_error_embed(f"Erro ao processar retirada: {str(e)}")
             await interaction.followup.send(embed=embed, ephemeral=True)
     
-    # @bau_retirada.autocomplete('item')
-    # async def bau_retirada_autocomplete(
-    #     self,
-    #     interaction: Interaction,
-    #     current: str
-    # ):
-    #     """Autocomplete para sugerir itens existentes"""
-    #     try:
-    #         async with get_db() as session:
-    #             result = await session.execute(
-    #                 select(BauItem).order_by(BauItem.nome)
-    #             )
-    #             itens = result.scalars().all()
-    #             
-    #             if current:
-    #                 itens = [i for i in itens if current.lower() in i.nome.lower()]
-    #             
-    #             return [
-    #                 app_commands.Choice(name=item.nome, value=item.nome)
-    #                 for item in itens[:25]
-    #             ]
-    #     except:
-    #         return []
+    @bau_retirada.autocomplete('item')
+    async def bau_retirada_autocomplete(
+        self,
+        interaction: Interaction,
+        current: str
+    ):
+        """Autocomplete estático com itens comuns"""
+        itens_comuns = [
+            "pistola", "submetralhadora", "fuzil", "escopeta", "sniper",
+            "municao 9mm", "municao 45", "municao 556", "municao 762",
+            "colete nivel 1", "colete nivel 2", "colete nivel 3",
+            "capacete", "mascara", "luvas", "botas",
+            "bandagem", "kit medico", "analgesico", "antibiotico",
+            "radio", "gps", "mapa", "bussola",
+            "carrinho", "mochila", "caixa", "armadura"
+        ]
+        
+        if current:
+            itens_comuns = [i for i in itens_comuns if current.lower() in i.lower()]
+        
+        return [
+            app_commands.Choice(name=item, value=item)
+            for item in itens_comuns[:25]
+        ]
     
     @app_commands.command(name="bau_itens", description="Lista todos os itens do baú e seus estoques")
     async def bau_itens(self, interaction: Interaction):
