@@ -3,6 +3,7 @@ from discord import app_commands, Interaction, Member, ui
 from discord.ext import commands
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
+from datetime import datetime, timezone, timedelta
 from database.connection import get_db
 from database.models import BauItem, BauMovimentacao
 from services.bau_service import BauService
@@ -12,6 +13,9 @@ from utils.embeds import EmbedBuilder
 from utils.validators import ValidationError
 from config import Config
 from typing import Optional
+
+# Fuso horário brasileiro (UTC-3)
+FUSO_BRASILEIRO = timezone(timedelta(hours=-3))
 
 class BauCommands(commands.Cog):
     """Comandos do sistema de Baú"""
@@ -238,8 +242,29 @@ class BauCommands(commands.Cog):
                 # Busca todos os itens
                 itens = await BauService.get_all_items(session)
                 
-                # Cria embed
-                embed = EmbedBuilder.create_bau_itens_embed(itens)
+                # Cria embed personalizado com IDs
+                embed = discord.Embed(
+                    title="📦 ITENS DO BAÚ",
+                    description="Estoque atual de todos os itens (com IDs para deleção)",
+                    color=discord.Color.green()
+                )
+                
+                if not itens:
+                    embed.add_field(name="ℹ️", value="Nenhum item cadastrado no baú", inline=False)
+                    await interaction.followup.send(embed=embed)
+                    return
+                
+                for item in itens[:25]:  # Limita a 25 itens
+                    embed.add_field(
+                        name=f"{item.nome} (ID: {item.id})",
+                        value=f"Estoque: {item.estoque}",
+                        inline=True
+                    )
+                
+                if len(itens) > 25:
+                    embed.set_footer(text=f"Mostrando 25 de {len(itens)} itens")
+                
+                embed.timestamp = datetime.now(FUSO_BRASILEIRO)
                 await interaction.followup.send(embed=embed)
                 
         except Exception as e:
@@ -356,7 +381,7 @@ class BauCommands(commands.Cog):
     
     @app_commands.command(name="bau_deletar_item", description="Deleta um item do baú e suas movimentações (apenas Alta Cúpula)")
     @app_commands.describe(
-        item="Nome do item a ser deletado"
+        item="Nome do item a ser deletado (ou ID se houver duplicidade)"
     )
     async def bau_deletar_item(
         self,
@@ -377,8 +402,15 @@ class BauCommands(commands.Cog):
         
         try:
             async with get_db() as session:
-                # Busca o item
-                item_obj = await BauService.get_item_by_nome(session, item)
+                # Tenta buscar por ID primeiro (se for número)
+                if item.isdigit():
+                    result = await session.execute(
+                        select(BauItem).where(BauItem.id == int(item))
+                    )
+                    item_obj = result.scalar_one_or_none()
+                else:
+                    # Tenta buscar por nome
+                    item_obj = await BauService.get_item_by_nome(session, item)
                 
                 if not item_obj:
                     embed = EmbedBuilder.create_error_embed(f"Item '{item}' não encontrado no baú.")
@@ -399,6 +431,7 @@ class BauCommands(commands.Cog):
                     color=discord.Color.orange()
                 )
                 embed.add_field(name="📦 Item", value=item_obj.nome, inline=True)
+                embed.add_field(name="🆔 ID", value=str(item_obj.id), inline=True)
                 embed.add_field(name="🔢 Estoque atual", value=str(item_obj.estoque), inline=True)
                 embed.add_field(name="📋 Movimentações", value=str(total_movimentacoes), inline=True)
                 embed.add_field(
