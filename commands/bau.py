@@ -38,35 +38,6 @@ class BauCommands(commands.Cog):
         quantidade: app_commands.Range[int, 1],
         motivo: Optional[str] = None
     ):
-        """Autocomplete para itens existentes"""
-        await bau_entry.autocomplete(interaction, item)
-    
-    @bau_entry.autocomplete('item')
-    async def bau_entry_autocomplete(
-        self,
-        interaction: Interaction,
-        current: str
-    ):
-        """Autocomplete para sugerir itens existentes"""
-        try:
-            async for session in get_db():
-                # Busca todos os itens
-                result = await session.execute(
-                    select(BauItem).order_by(BauItem.nome)
-                )
-                itens = result.scalars().all()
-                
-                # Filtra itens que começam com o texto atual
-                if current:
-                    itens = [i for i in itens if current.lower() in i.lower()]
-                
-                # Retorna até 25 sugestões
-                return [
-                    app_commands.Choice(name=item, value=item)
-                    for item in itens[:25]
-                ]
-        except:
-            return []
         """Registra uma entrada de item no baú"""
         
         # Verifica se está no canal correto
@@ -98,23 +69,22 @@ class BauCommands(commands.Cog):
                     user_name=user_info['user_name'],
                     item_nome=item,
                     quantidade=quantidade,
-                    motivo=motivo
+                    motivo=motivo or ""
                 )
                 
                 # Envia log
                 canal_logs = await self.get_canal_logs()
                 if canal_logs:
-                    await LogService.send_bau_log(
+                    await LogService.log_bau_entrada(
                         session=session,
                         movimentacao=movimentacao,
                         user_mention=user_info['user_mention'],
                         canal_logs=canal_logs
                     )
                 
-                # Responde ao usuário
                 embed = EmbedBuilder.create_success_embed(
-                    f"Entrada de {quantidade}x '{item}' registrada com sucesso!\n\n"
-                    f"Estoque após operação: {movimentacao.estoque_posterior}"
+                    f"Entrada de {quantidade}x {item} registrada com sucesso!\n\n"
+                    f"Estoque atual: {movimentacao.item.estoque} unidades"
                 )
                 await interaction.followup.send(embed=embed)
                 
@@ -124,6 +94,33 @@ class BauCommands(commands.Cog):
         except Exception as e:
             embed = EmbedBuilder.create_error_embed(f"Erro ao processar entrada: {str(e)}")
             await interaction.followup.send(embed=embed, ephemeral=True)
+    
+    @bau_entrada.autocomplete('item')
+    async def bau_entrada_autocomplete(
+        self,
+        interaction: Interaction,
+        current: str
+    ):
+        """Autocomplete para sugerir itens existentes"""
+        try:
+            async for session in get_db():
+                # Busca todos os itens
+                result = await session.execute(
+                    select(BauItem).order_by(BauItem.nome)
+                )
+                itens = result.scalars().all()
+                
+                # Filtra itens que começam com o texto atual
+                if current:
+                    itens = [i for i in itens if current.lower() in i.nome.lower()]
+                
+                # Retorna até 25 sugestões
+                return [
+                    app_commands.Choice(name=item.nome, value=item.nome)
+                    for item in itens[:25]
+                ]
+        except:
+            return []
     
     @app_commands.command(name="bau_retirada", description="Registra uma retirada de item do baú")
     @app_commands.describe(
@@ -138,32 +135,6 @@ class BauCommands(commands.Cog):
         quantidade: app_commands.Range[int, 1],
         motivo: Optional[str] = None
     ):
-        """Autocomplete para itens existentes"""
-        await bau_retirada.autocomplete(interaction, item)
-    
-    @bau_retirada.autocomplete('item')
-    async def bau_retirada_autocomplete(
-        self,
-        interaction: Interaction,
-        current: str
-    ):
-        """Autocomplete para sugerir itens existentes"""
-        try:
-            async for session in get_db():
-                result = await session.execute(
-                    select(BauItem).order_by(BauItem.nome)
-                )
-                itens = result.scalars().all()
-                
-                if current:
-                    itens = [i for i in itens if current.lower() in i.lower()]
-                
-                return [
-                    app_commands.Choice(name=item, value=item)
-                    for item in itens[:25]
-                ]
-        except:
-            return []
         """Registra uma retirada de item do baú"""
         
         # Verifica se está no canal correto
@@ -195,23 +166,22 @@ class BauCommands(commands.Cog):
                     user_name=user_info['user_name'],
                     item_nome=item,
                     quantidade=quantidade,
-                    motivo=motivo
+                    motivo=motivo or ""
                 )
                 
                 # Envia log
                 canal_logs = await self.get_canal_logs()
                 if canal_logs:
-                    await LogService.send_bau_log(
+                    await LogService.log_bau_retirada(
                         session=session,
                         movimentacao=movimentacao,
                         user_mention=user_info['user_mention'],
                         canal_logs=canal_logs
                     )
                 
-                # Responde ao usuário
                 embed = EmbedBuilder.create_success_embed(
-                    f"Retirada de {quantidade}x '{item}' registrada com sucesso!\n\n"
-                    f"Estoque após operação: {movimentacao.estoque_posterior}"
+                    f"Retirada de {quantidade}x {item} registrada com sucesso!\n\n"
+                    f"Estoque atual: {movimentacao.item.estoque} unidades"
                 )
                 await interaction.followup.send(embed=embed)
                 
@@ -221,6 +191,30 @@ class BauCommands(commands.Cog):
         except Exception as e:
             embed = EmbedBuilder.create_error_embed(f"Erro ao processar retirada: {str(e)}")
             await interaction.followup.send(embed=embed, ephemeral=True)
+    
+    @bau_retirada.autocomplete('item')
+    async def bau_retirada_autocomplete(
+        self,
+        interaction: Interaction,
+        current: str
+    ):
+        """Autocomplete para sugerir itens existentes"""
+        try:
+            async for session in get_db():
+                result = await session.execute(
+                    select(BauItem).order_by(BauItem.nome)
+                )
+                itens = result.scalars().all()
+                
+                if current:
+                    itens = [i for i in itens if current.lower() in i.nome.lower()]
+                
+                return [
+                    app_commands.Choice(name=item.nome, value=item.nome)
+                    for item in itens[:25]
+                ]
+        except:
+            return []
     
     @app_commands.command(name="bau_itens", description="Lista todos os itens do baú e seus estoques")
     async def bau_itens(self, interaction: Interaction):
@@ -335,7 +329,7 @@ class BauCommands(commands.Cog):
                     return
                 
                 # Cria embed
-                embed = Embed(
+                embed = discord.Embed(
                     title=f"📦 ESTOQUE: {item_obj.nome}",
                     description=f"Quantidade disponível: {item_obj.estoque}",
                     color=0x00ff00

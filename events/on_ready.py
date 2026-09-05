@@ -1,5 +1,6 @@
 from services.log_service import LogService
 from database.connection import init_db
+from config import Config
 
 async def on_ready(bot):
     """Evento quando o bot está pronto"""
@@ -47,7 +48,7 @@ async def on_ready(bot):
     
     # Inicia a task de frases automáticas
     from services.frase_service import FraseService
-    print(f'🔄 Task de frases automáticas iniciada (intervalo: {bot.config.INTERVALO_FRASES} minutos)')
+    print(f'🔄 Task de frases automáticas iniciada (intervalo: {Config.INTERVALO_FRASES} minutos)')
     
     # Log de inicialização
     try:
