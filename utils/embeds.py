@@ -1,6 +1,9 @@
 from discord import Embed, Color
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from utils.formatters import format_currency, format_datetime, format_number, get_emoji_tipo_cofre, get_emoji_tipo_bau, format_tipo_cofre, format_tipo_bau
+
+# Fuso horário brasileiro (UTC-3)
+FUSO_BRASILEIRO = timezone(timedelta(hours=-3))
 
 class EmbedBuilder:
     """Construtor de embeds para o bot"""
@@ -26,7 +29,7 @@ class EmbedBuilder:
         embed.add_field(name="📅 Data", value=format_datetime(movimentacao.created_at), inline=False)
         
         embed.set_footer(text=f"ID da movimentação: {movimentacao.id}")
-        embed.timestamp = datetime.now()
+        embed.timestamp = datetime.now(FUSO_BRASILEIRO)
         
         return embed
     
@@ -52,7 +55,7 @@ class EmbedBuilder:
         embed.add_field(name="📅 Data", value=format_datetime(movimentacao.created_at), inline=False)
         
         embed.set_footer(text=f"ID da movimentação: {movimentacao.id}")
-        embed.timestamp = datetime.now()
+        embed.timestamp = datetime.now(FUSO_BRASILEIRO)
         
         return embed
     
@@ -78,7 +81,7 @@ class EmbedBuilder:
                 inline=False
             )
         
-        embed.timestamp = datetime.now()
+        embed.timestamp = datetime.now(FUSO_BRASILEIRO)
         
         return embed
     
@@ -117,7 +120,7 @@ class EmbedBuilder:
         if len(movimentacoes) > 10:
             embed.set_footer(text=f"Mostrando 10 de {len(movimentacoes)} movimentações")
         
-        embed.timestamp = datetime.now()
+        embed.timestamp = datetime.now(FUSO_BRASILEIRO)
         
         return embed
     
@@ -157,7 +160,7 @@ class EmbedBuilder:
         if len(movimentacoes) > 10:
             embed.set_footer(text=f"Mostrando 10 de {len(movimentacoes)} movimentações")
         
-        embed.timestamp = datetime.now()
+        embed.timestamp = datetime.now(FUSO_BRASILEIRO)
         
         return embed
     
@@ -184,7 +187,7 @@ class EmbedBuilder:
         if len(itens) > 25:
             embed.set_footer(text=f"Mostrando 25 de {len(itens)} itens")
         
-        embed.timestamp = datetime.now()
+        embed.timestamp = datetime.now(FUSO_BRASILEIRO)
         
         return embed
     
@@ -237,7 +240,7 @@ class EmbedBuilder:
             embed.add_field(name=key, value=str(value), inline=False)
         
         embed.set_footer(text="Clique em um botão para confirmar ou cancelar")
-        embed.timestamp = datetime.now()
+        embed.timestamp = datetime.now(FUSO_BRASILEIRO)
         
         return embed
     
@@ -276,6 +279,6 @@ class EmbedBuilder:
             ])
             embed.add_field(name="👥 Top Usuários", value=top_text, inline=False)
         
-        embed.timestamp = datetime.now()
+        embed.timestamp = datetime.now(FUSO_BRASILEIRO)
         
         return embed
