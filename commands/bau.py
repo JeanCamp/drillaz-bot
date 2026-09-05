@@ -48,6 +48,11 @@ class BauCommands(commands.Cog):
         except:
             return []
     
+    def limpar_cache(self):
+        """Limpa o cache de itens"""
+        self._itens_cache = None
+        self._cache_timestamp = None
+    
     @app_commands.command(name="bau_entrada", description="Registra uma entrada de item no baú")
     @app_commands.describe(
         item="Nome do item (use autocomplete para itens existentes)",
@@ -403,7 +408,7 @@ class BauCommands(commands.Cog):
                 )
                 
                 # Adiciona botões de confirmação
-                view = ConfirmarDelecaoView(item_obj.id, item_obj.nome)
+                view = ConfirmarDelecaoView(item_obj.id, item_obj.nome, self)
                 await interaction.followup.send(embed=embed, view=view)
                 
         except Exception as e:
@@ -413,10 +418,11 @@ class BauCommands(commands.Cog):
 class ConfirmarDelecaoView(ui.View):
     """View com botões para confirmar deleção de item"""
     
-    def __init__(self, item_id: int, item_nome: str):
+    def __init__(self, item_id: int, item_nome: str, bau_commands):
         super().__init__(timeout=60)
         self.item_id = item_id
         self.item_nome = item_nome
+        self.bau_commands = bau_commands
     
     @ui.button(label="✅ Confirmar", style=discord.ButtonStyle.green, emoji="✅")
     async def confirmar(self, interaction: Interaction, button: ui.Button):
@@ -438,7 +444,7 @@ class ConfirmarDelecaoView(ui.View):
                 await session.commit()
                 
                 # Limpa o cache de itens
-                # Precisamos reiniciar o bot ou implementar limpeza de cache
+                self.bau_commands.limpar_cache()
                 
                 embed = EmbedBuilder.create_success_embed(
                     f"Item **{self.item_nome}** e suas movimentações foram deletados com sucesso!"
