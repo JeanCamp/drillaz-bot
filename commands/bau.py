@@ -2,7 +2,9 @@ import discord
 from discord import app_commands, Interaction, Member
 from discord.ext import commands
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from database.connection import get_db
+from database.models import BauItem
 from services.bau_service import BauService
 from services.permission_service import PermissionService
 from services.log_service import LogService
@@ -16,12 +18,35 @@ class BauCommands(commands.Cog):
     
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self._itens_cache = None
+        self._cache_timestamp = None
     
     async def get_canal_logs(self):
         """Retorna o canal de logs configurado"""
         if Config.CANAL_LOGS_ID == 0:
             return None
         return self.bot.get_channel(Config.CANAL_LOGS_ID)
+    
+    async def get_itens_cache(self):
+        """Retorna itens do cache ou carrega do banco de dados"""
+        import time
+        
+        # Se o cache tem menos de 5 minutos, usa cache
+        if self._cache_timestamp and (time.time() - self._cache_timestamp) < 300:
+            return self._itens_cache
+        
+        # Carrega do banco de dados
+        try:
+            async with get_db() as session:
+                result = await session.execute(
+                    select(BauItem).order_by(BauItem.nome)
+                )
+                itens = result.scalars().all()
+                self._itens_cache = [item.nome for item in itens]
+                self._cache_timestamp = time.time()
+                return self._itens_cache
+        except:
+            return []
     
     @app_commands.command(name="bau_entrada", description="Registra uma entrada de item no baú")
     @app_commands.describe(
@@ -99,23 +124,15 @@ class BauCommands(commands.Cog):
         interaction: Interaction,
         current: str
     ):
-        """Autocomplete estático com itens comuns"""
-        itens_comuns = [
-            "pistola", "submetralhadora", "fuzil", "escopeta", "sniper",
-            "municao 9mm", "municao 45", "municao 556", "municao 762",
-            "colete nivel 1", "colete nivel 2", "colete nivel 3",
-            "capacete", "mascara", "luvas", "botas",
-            "bandagem", "kit medico", "analgesico", "antibiotico",
-            "radio", "gps", "mapa", "bussola",
-            "carrinho", "mochila", "caixa", "armadura"
-        ]
+        """Autocomplete com itens do banco de dados (usando cache)"""
+        itens = await self.get_itens_cache()
         
         if current:
-            itens_comuns = [i for i in itens_comuns if current.lower() in i.lower()]
+            itens = [i for i in itens if current.lower() in i.lower()]
         
         return [
             app_commands.Choice(name=item, value=item)
-            for item in itens_comuns[:25]
+            for item in itens[:25]
         ]
     
     @app_commands.command(name="bau_retirada", description="Registra uma retirada de item do baú")
@@ -194,23 +211,15 @@ class BauCommands(commands.Cog):
         interaction: Interaction,
         current: str
     ):
-        """Autocomplete estático com itens comuns"""
-        itens_comuns = [
-            "pistola", "submetralhadora", "fuzil", "escopeta", "sniper",
-            "municao 9mm", "municao 45", "municao 556", "municao 762",
-            "colete nivel 1", "colete nivel 2", "colete nivel 3",
-            "capacete", "mascara", "luvas", "botas",
-            "bandagem", "kit medico", "analgesico", "antibiotico",
-            "radio", "gps", "mapa", "bussola",
-            "carrinho", "mochila", "caixa", "armadura"
-        ]
+        """Autocomplete com itens do banco de dados (usando cache)"""
+        itens = await self.get_itens_cache()
         
         if current:
-            itens_comuns = [i for i in itens_comuns if current.lower() in i.lower()]
+            itens = [i for i in itens if current.lower() in i.lower()]
         
         return [
             app_commands.Choice(name=item, value=item)
-            for item in itens_comuns[:25]
+            for item in itens[:25]
         ]
     
     @app_commands.command(name="bau_itens", description="Lista todos os itens do baú e seus estoques")
