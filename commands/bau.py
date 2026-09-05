@@ -1,10 +1,10 @@
 import discord
-from discord import app_commands, Interaction, Member
+from discord import app_commands, Interaction, Member, ui
 from discord.ext import commands
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from database.connection import get_db
-from database.models import BauItem
+from database.models import BauItem, BauMovimentacao
 from services.bau_service import BauService
 from services.permission_service import PermissionService
 from services.log_service import LogService
@@ -348,6 +348,120 @@ class BauCommands(commands.Cog):
         except Exception as e:
             embed = EmbedBuilder.create_error_embed(f"Erro ao consultar estoque: {str(e)}")
             await interaction.followup.send(embed=embed, ephemeral=True)
+    
+    @app_commands.command(name="bau_deletar_item", description="Deleta um item do baú e suas movimentações (apenas Alta Cúpula)")
+    @app_commands.describe(
+        item="Nome do item a ser deletado"
+    )
+    async def bau_deletar_item(
+        self,
+        interaction: Interaction,
+        item: str
+    ):
+        """Deleta um item do baú e suas movimentações"""
+        
+        # Verifica permissão (apenas Alta Cúpula)
+        if not PermissionService.can_view_bau_historico(interaction.user):
+            await interaction.response.send_message(
+                "❌ Apenas a Alta Cúpula pode deletar itens do baú.",
+                ephemeral=True
+            )
+            return
+        
+        await interaction.response.defer()
+        
+        try:
+            async with get_db() as session:
+                # Busca o item
+                item_obj = await BauService.get_item_by_nome(session, item)
+                
+                if not item_obj:
+                    embed = EmbedBuilder.create_error_embed(f"Item '{item}' não encontrado no baú.")
+                    await interaction.followup.send(embed=embed, ephemeral=True)
+                    return
+                
+                # Conta movimentações
+                from sqlalchemy import func, select
+                result = await session.execute(
+                    select(func.count()).select_from(BauMovimentacao).where(BauMovimentacao.item_id == item_obj.id)
+                )
+                total_movimentacoes = result.scalar()
+                
+                # Mostra confirmação
+                embed = discord.Embed(
+                    title="⚠️ CONFIRMAÇÃO DE DELEÇÃO",
+                    description=f"Você está prestes a deletar o item **{item_obj.nome}**",
+                    color=discord.Color.orange()
+                )
+                embed.add_field(name="📦 Item", value=item_obj.nome, inline=True)
+                embed.add_field(name="🔢 Estoque atual", value=str(item_obj.estoque), inline=True)
+                embed.add_field(name="📋 Movimentações", value=str(total_movimentacoes), inline=True)
+                embed.add_field(
+                    name="⚠️ AVISO",
+                    value="Isso deletará o item e TODAS as suas movimentações do histórico. Esta ação não pode ser desfeita!",
+                    inline=False
+                )
+                
+                # Adiciona botões de confirmação
+                view = ConfirmarDelecaoView(item_obj.id, item_obj.nome)
+                await interaction.followup.send(embed=embed, view=view)
+                
+        except Exception as e:
+            embed = EmbedBuilder.create_error_embed(f"Erro ao preparar deleção: {str(e)}")
+            await interaction.followup.send(embed=embed, ephemeral=True)
+
+class ConfirmarDelecaoView(ui.View):
+    """View com botões para confirmar deleção de item"""
+    
+    def __init__(self, item_id: int, item_nome: str):
+        super().__init__(timeout=60)
+        self.item_id = item_id
+        self.item_nome = item_nome
+    
+    @ui.button(label="✅ Confirmar", style=discord.ButtonStyle.green, emoji="✅")
+    async def confirmar(self, interaction: Interaction, button: ui.Button):
+        """Confirma a deleção do item"""
+        await interaction.response.defer()
+        
+        try:
+            async with get_db() as session:
+                # Deleta movimentações
+                await session.execute(
+                    delete(BauMovimentacao).where(BauMovimentacao.item_id == self.item_id)
+                )
+                
+                # Deleta o item
+                await session.execute(
+                    delete(BauItem).where(BauItem.id == self.item_id)
+                )
+                
+                await session.commit()
+                
+                # Limpa o cache de itens
+                # Precisamos reiniciar o bot ou implementar limpeza de cache
+                
+                embed = EmbedBuilder.create_success_embed(
+                    f"Item **{self.item_nome}** e suas movimentações foram deletados com sucesso!"
+                )
+                await interaction.followup.send(embed=embed)
+                
+                # Desabilita os botões
+                for child in self.children:
+                    child.disabled = True
+                await interaction.edit_original_response(view=self)
+                
+        except Exception as e:
+            embed = EmbedBuilder.create_error_embed(f"Erro ao deletar item: {str(e)}")
+            await interaction.followup.send(embed=embed, ephemeral=True)
+    
+    @ui.button(label="❌ Cancelar", style=discord.ButtonStyle.red, emoji="❌")
+    async def cancelar(self, interaction: Interaction, button: ui.Button):
+        """Cancela a deleção"""
+        await interaction.response.edit_message(
+            content="❌ Deleção cancelada.",
+            embed=None,
+            view=None
+        )
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(BauCommands(bot))
